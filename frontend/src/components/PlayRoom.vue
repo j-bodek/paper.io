@@ -174,11 +174,16 @@ export default {
 }
 
 .canvas-wrapper {
-  position: relative;
-  border: 10px solid black;
+  position: absolute;
+  padding: 0;
+  width: 2000px;
+  height: 2000px;
+  border: 2px solid black;
 }
 
 #background {
+  top: 0;
+  left: 0;
   position: absolute;
   width: 2000px;
   height: 2000px;
@@ -186,6 +191,8 @@ export default {
 }
 
 #grid {
+  top: 0;
+  left: 0;
   position: absolute;
   width: 2000px;
   height: 2000px;
@@ -193,6 +200,8 @@ export default {
 }
 
 #players {
+  top: 0;
+  left: 0;
   position: absolute;
   width: 2000px;
   height: 2000px;
