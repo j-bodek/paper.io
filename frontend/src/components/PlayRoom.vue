@@ -1,9 +1,11 @@
 <template>
   <div class="container">
     <div class="canvas-container">
-      <canvas id="background" width="2000px" height="2000px"></canvas>
-      <canvas id="players" width="2000px" height="2000px"></canvas>
-      <canvas id="grid" width="2000px" height="2000px"></canvas>
+      <div class="canvas-wrapper">
+        <canvas id="background" width="2000px" height="2000px"></canvas>
+        <canvas id="players" width="2000px" height="2000px"></canvas>
+        <canvas id="grid" width="2000px" height="2000px"></canvas>
+      </div>
     </div>
   </div>
 </template>
@@ -112,20 +114,21 @@ export default {
       this.$store.dispatch('movePlayer');
     },
     updateCamera(currentPosition) {
-      if (currentPosition[0] * this.squareSize >= this.container.clientWidth / 2) {
+      let padding = 100;
+      if (currentPosition[0] * this.squareSize + padding >= this.container.clientWidth / 2) {
         let scrollLeft = Math.min(
-          currentPosition[0] * this.squareSize - this.container.clientWidth / 2,
-          this.$store.getters['getBoard'].length * this.squareSize - this.container.clientWidth
+          currentPosition[0] * this.squareSize + padding - this.container.clientWidth / 2,
+          this.$store.getters['getBoard'].length * this.squareSize + 2 * padding - this.container.clientWidth
         )
         this.canvasContainer.style.left = `-${scrollLeft}px`;
       } else {
         this.canvasContainer.style.left = `0px`;
       }
 
-      if (currentPosition[1] * this.squareSize >= this.container.clientHeight / 2) {
+      if (currentPosition[1] * this.squareSize + padding >= this.container.clientHeight / 2) {
         let scrollTop = Math.min(
-          currentPosition[1] * this.squareSize - this.container.clientHeight / 2,
-          this.$store.getters['getBoard'][0].length * this.squareSize - this.container.clientHeight
+          currentPosition[1] * this.squareSize + padding - this.container.clientHeight / 2,
+          this.$store.getters['getBoard'][0].length * this.squareSize + 2 * padding - this.container.clientHeight
         )
         this.canvasContainer.style.top = `-${scrollTop}px`;
       } else {
@@ -159,19 +162,24 @@ export default {
   width: 100%;
   height: 100vh;
   margin: 0;
+  background: gray;
   overflow: hidden;
 }
 
 .canvas-container {
   position: absolute;
+  padding: 100px;
   top: 0;
   left: 0;
 }
 
+.canvas-wrapper {
+  position: relative;
+  border: 10px solid black;
+}
+
 #background {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 2000px;
   height: 2000px;
   background: blue;
@@ -179,8 +187,6 @@ export default {
 
 #grid {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 2000px;
   height: 2000px;
   background: transparent;
@@ -188,8 +194,6 @@ export default {
 
 #players {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 2000px;
   height: 2000px;
   background: transparent;
