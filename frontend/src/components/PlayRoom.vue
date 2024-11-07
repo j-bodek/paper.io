@@ -1,6 +1,10 @@
 <template>
   <div class="container">
-    <canvas id="board"></canvas>
+    <div class="canvas-container">
+      <canvas id="background" width="2000px" height="2000px"></canvas>
+      <canvas id="players" width="2000px" height="2000px"></canvas>
+      <canvas id="grid" width="2000px" height="2000px"></canvas>
+    </div>
   </div>
 </template>
 
@@ -11,31 +15,71 @@ export default {
     this.runAnimation();
   },
   computed: {
+    squareSize() {
+      return this.board.width / 50;
+    },
+    playersBoard() {
+      return document.getElementById('players');
+    },
+    gridBoard() {
+      return document.getElementById('grid');
+    },
     board() {
-      return document.getElementById('board');
+      return document.getElementById('background');
+    },
+    canvasContainer() {
+      return document.querySelector('.canvas-container');
+    },
+    container() {
+      return document.querySelector('.container');
     }
   },
   methods: {
     runAnimation() {
-      console.log(this.board.width, this.board.height);
       this.$store.dispatch("initBoard", {
-        width: this.board.width,
-        height: this.board.height
+        width: 50,
+        height: Math.floor(this.board.height / this.squareSize),
       });
       document.addEventListener('keydown', this.changeDirection);
+      this.drawGrid();
       let animation = setInterval(() => {
-        this.animateBoard(animation);
         if (!this.$store.getters['isPlaying']) {
           clearInterval(animation);
           alert('Game Over');
         }
-      }, 20);
+        this.animateBoard();
+      }, 250);
+    },
+    drawGrid() {
+      let bw = this.gridBoard.width;
+      // Box height
+      let bh = this.gridBoard.height;
+      // Padding
+      let p = 0;
+
+      let canvas = this.gridBoard;
+      let context = canvas.getContext("2d");
+
+
+      for (let x = this.squareSize; x <= bw; x += this.squareSize) {
+        context.moveTo(x + p, p);
+        context.lineTo(x + p, bh + p);
+      }
+
+      for (let x = this.squareSize; x <= bh; x += this.squareSize) {
+        context.moveTo(p, x + p);
+        context.lineTo(bw + p, x + p);
+      }
+      context.strokeStyle = "black";
+      context.stroke();
     },
     animateBoard() {
-      const ctx = this.board.getContext('2d');
-      // ctx.clearRect(0, 0, this.board.width, this.board.height);
+      const ctxBg = this.board.getContext('2d');
+      const ctx = this.playersBoard.getContext('2d');
       let player = this.$store.getters['getPlayer'];
-      ctx.fillStyle = 'green';
+      ctxBg.fillStyle = '#17A137';
+      ctx.fillStyle = '#80ed99';
+      let pause = false;
 
       if (this.$store.getters['getUpdateBoard']) {
         console.log("update board");
@@ -43,19 +87,53 @@ export default {
         for (let i = 0; i < board.length; i++) {
           for (let j = 0; j < board[i].length; j++) {
             if (board[i][j] === 2) {
-              ctx.fillRect(j, i, 3, 2);
+              ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
             }
           }
         }
         this.$store.dispatch('setUpdateBoard', false);
+        ctx.clearRect(0, 0, this.board.width, this.board.height);
+        if (pause) {
+          this.$store.dispatch('setIsPlaying', false);
+        }
       }
 
-      ctx.fillRect(player.positions.cur[0], player.positions.cur[1], 3, 2);
+      let board = this.$store.getters['getBoard'];
+      if (board[player.positions.prev[1]][player.positions.prev[0]] === 2) {
+        ctx.clearRect(0, 0, this.board.width, this.board.height);
+      }
+
+      ctx.fillRect(
+        player.positions.cur[0] * this.squareSize,
+        player.positions.cur[1] * this.squareSize,
+        this.squareSize, this.squareSize
+      );
+      this.updateCamera(player.positions.cur);
       this.$store.dispatch('movePlayer');
+    },
+    updateCamera(currentPosition) {
+      if (currentPosition[0] * this.squareSize >= this.container.clientWidth / 2) {
+        let scrollLeft = Math.min(
+          currentPosition[0] * this.squareSize - this.container.clientWidth / 2,
+          this.$store.getters['getBoard'].length * this.squareSize - this.container.clientWidth
+        )
+        this.canvasContainer.style.left = `-${scrollLeft}px`;
+      } else {
+        this.canvasContainer.style.left = `0px`;
+      }
+
+      if (currentPosition[1] * this.squareSize >= this.container.clientHeight / 2) {
+        let scrollTop = Math.min(
+          currentPosition[1] * this.squareSize - this.container.clientHeight / 2,
+          this.$store.getters['getBoard'][0].length * this.squareSize - this.container.clientHeight
+        )
+        this.canvasContainer.style.top = `-${scrollTop}px`;
+      } else {
+        this.canvasContainer.style.top = `0px`;
+      }
     },
     changeDirection(e) {
       // listed four keys: w, a, s, d
-      // console.log(e.keyCode);
       if (e.keyCode === 87) {
         // move up
         this.$store.dispatch('changeDirection', { direction: [0, -1] });
@@ -77,17 +155,43 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .container {
-  display: flex;
+  position: absolute;
   width: 100%;
   height: 100vh;
   margin: 0;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
 }
 
-#board {
-  width: 1000px;
-  height: 700px;
+.canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2000px;
+  height: 2000px;
   background: blue;
+}
+
+#grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2000px;
+  height: 2000px;
+  background: transparent;
+}
+
+#players {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2000px;
+  height: 2000px;
+  background: transparent;
 }
 </style>

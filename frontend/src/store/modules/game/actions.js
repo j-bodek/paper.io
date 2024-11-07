@@ -10,5 +10,8 @@ export default{
     },
     setUpdateBoard(context, payload){
         context.commit('setUpdateBoard', payload);
+    },
+    setIsPlaying(context, payload){
+        context.commit('setIsPlaying', payload);
     }
 }

@@ -1,35 +1,6 @@
-function checkEnclosedPoint(board, payload){
-
-    let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-    for (let i = 0; i < directions.length; i++){
-        let cur = payload.cur;
-        let x = cur[0] + directions[i][0];
-        let y = cur[1] + directions[i][1];
-
-        let foundBorder = false;
-        while (
-            x >= 0 && x < board[0].length && y > 0 && y < board.length
-        ){
-            if (payload.boarders.includes(board[y][x])){
-                foundBorder = true;
-                break;
-            }
-
-            x += directions[i][0];
-            y += directions[i][1];
-        }
-        
-        if (!foundBorder){
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function findEnclosedPoint(board, payload){
+function findBoudingBox(board, payload){
     let x = payload.x; let y = payload.y;
-    let enclosedPoint = null;
+    let maxX = x; let maxY = y; let minX = x; let minY = y;
     let queue = [[x, y]];
     let visited = new Set([`${x},${y}`]);
     let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -39,33 +10,30 @@ function findEnclosedPoint(board, payload){
         let cur = queue.shift();
         let x = cur[0]; let y = cur[1];
 
-        if (
-            // if point not in board
-            x < 0 || x >= board[0].length || y < 0 || y >= board.length
-        ){
-            continue;
-        }
-
-        if (
-            board[y][x] === 0
-            && checkEnclosedPoint(board, {cur: cur, boarders: payload.boarders})
-        ){
-            enclosedPoint = cur;
-            break;
-        }
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
 
         for (let i = 0; i < directions.length; i ++){
-            let cell = `${x + directions[i][0]},${y + directions[i][1]}`;
-            if (visited.has(cell)){
+            let nextX = x + directions[i][0]; let nextY = y + directions[i][1];
+            let cell = `${nextX},${nextY}`;
+
+            if (
+                // if point visited, not in board or has value different from line
+                visited.has(cell)
+                || nextX < 0 || nextX >= board[0].length || nextY < 0 || nextY >= board.length
+                || !payload.values.includes(board[nextY][nextX])
+            ){
                 continue;
             }
 
-            queue.push([x + directions[i][0], y + directions[i][1]]);
+            queue.push([nextX, nextY]);
             visited.add(cell);
         }
     }
 
-    return enclosedPoint
+    return [minX, minY, maxX, maxY];
 }
 
 
@@ -77,7 +45,7 @@ export default{
             let row = [];
             for (let j = 0; j < x; j ++){
                 if (
-                    i >= 20 && i <= 40 && j >= 20 && j <= 40
+                    i >= 0 && i <= 2 && j >= 0 && j <= 2
                 ){
                     row.push(2);
                 }else{
@@ -89,6 +57,9 @@ export default{
 
         state.board = board;
         state.updateBoard = true;
+    },
+    setIsPlaying(state, payload){
+        state.isPlaying = payload;
     },
     movePlayer(state){
         state.player.positions.prev = state.player.positions.cur.slice();
@@ -103,7 +74,6 @@ export default{
             || state.player.positions.cur[1] >= state.board.length
             || state.board[state.player.positions.cur[1]][state.player.positions.cur[0]] === 1
         ){
-            console.log("Player collision detected");
             state.isPlaying = false;
             return;
         }
@@ -140,9 +110,9 @@ export default{
     },
     updateBoard(state, payload){
         if (
-            payload.x > 0 
+            payload.x >= 0 
             && payload.x < state.board[0].length 
-            && payload.y > 0 
+            && payload.y >= 0 
             && payload.y < state.board.length
             && state.board[payload.y][payload.x] !== 2
         ){
@@ -151,11 +121,10 @@ export default{
 
         // if line start and end are set, fill area between them
         if (state.player.line.start != null && state.player.line.end != null){
-            let point = findEnclosedPoint(state.board, {x: state.player.positions.cur[0], y: state.player.positions.cur[1], boarders: [1, 2]});
-            if (point != null){
-                this.commit("fillArea", {start: point, boarders: [1, 2]});
-                state.updateBoard = true;
-            }
+            let boundingBox = findBoudingBox(state.board, {x: state.player.positions.cur[0], y: state.player.positions.cur[1], values: [1, 2]});
+            this.commit("fillBoundingBox", {boundingBox: boundingBox});
+            this.commit("fillNewArea", {value: 2, boundingBox: boundingBox});
+            state.updateBoard = true;
 
             state.player.line.start = null;
             state.player.line.end = null;
@@ -164,8 +133,42 @@ export default{
     setUpdateBoard(state, payload){
         state.updateBoard = payload;
     },
+    fillNewArea(state, payload){
+        let [minX, minY, maxX, maxY] = payload.boundingBox;
+
+        for (let col = minY; col <= maxY; col ++){
+            for (let row = minX; row <= maxX; row ++){
+                if (state.board[col][row] === -1){
+                    state.board[col][row] = 0;
+                }else{
+                    state.board[col][row] = payload.value;
+                }
+            }
+        }
+
+    },
+    fillBoundingBox(state, payload){
+        let [minX, minY, maxX, maxY] = payload.boundingBox;
+
+        for (let col = minY; col <= maxY; col ++){
+            if (col === minY || col === maxY){
+                for (let row = minX; row <= maxX; row ++){
+                    this.commit("fillArea", {start: [row, col], value: 0, boundingBox: payload.boundingBox});
+                }
+            }else{
+                this.commit("fillArea", {start: [minX, col], value: 0, boundingBox: payload.boundingBox});
+                this.commit("fillArea", {start: [maxX, col], value: 0, boundingBox: payload.boundingBox});
+            }
+        }
+
+    },
     fillArea(state, payload){
+        if (state.board[payload.start[1]][payload.start[0]] !== payload.value){
+            return;
+        }
+
         let stack = [payload.start];
+        let [minX, minY, maxX, maxY] = payload.boundingBox;
         let visited = new Set([`${payload.start[0]},${payload.start[1]}`]);
 
         let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -174,29 +177,31 @@ export default{
             let cur = stack.pop();
             let x = cur[0]; let y = cur[1];
 
-            if (
-                x < 0 || x >= state.board[0].length || y < 0 || y >= state.board.length
-            ){
-                continue;
-            }
-
-            // check if cell is already filled or is a border
-            if (payload.boarders.includes(state.board[y][x])){
-                state.board[y][x] = 2;
-                continue;
-            }
-
-            state.board[y][x] = 2;
-
+            
             for (let i = 0; i < directions.length; i ++){
-                let cell = `${x + directions[i][0]},${y + directions[i][1]}`;
+                let nextX = x + directions[i][0];
+                let nextY = y + directions[i][1];
+
+                let cell = `${nextX},${nextY}`;
+
                 if (visited.has(cell)){
                     continue;
                 }
 
-                stack.push([x + directions[i][0], y + directions[i][1]]);
-                visited.add(cell);
+                if (
+                    nextX < minX || nextX > maxX || nextY < minY || nextY > maxY
+                ){
+                    continue;
+                }
+
+                if (state.board[nextY][nextX] === payload.value){
+                    stack.push([nextX, nextY]);
+                    visited.add(cell);
+                }
+
             }
+
+            state.board[y][x] = -1;
         }
     }
 }

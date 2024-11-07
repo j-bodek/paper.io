@@ -12,8 +12,8 @@ export default{
             // player coordinates
             player: {
                 positions: {
-                    cur: [40, 40],
-                    prev: [40, 40],
+                    cur: [0, 0],
+                    prev: [0, 0],
                 },
                 line: {start: null, end: null},
                 direction: [1, 0],
