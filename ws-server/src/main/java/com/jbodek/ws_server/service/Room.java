@@ -12,15 +12,18 @@ import com.jbodek.ws_server.model.response.PlayersResponse;
 public class Room {
 
     private SimpMessagingTemplate template;
+    private Board board;
     private HashMap<String, Player> players;
 
     public Room(SimpMessagingTemplate template) {
         this.players = new HashMap<String, Player>();
+        this.board = new Board(template);
         this.template = template;
     }
 
     public void addPlayer(Player player) {
         this.players.put(player.getId(), new Player(player));
+        this.board.initPlayer(player.getData().getCurPos(), player.getData().getAreaValue());
 
         this.template.convertAndSend("/room/subscribe", new PlayersResponse(this.getPlayersData()));
 
