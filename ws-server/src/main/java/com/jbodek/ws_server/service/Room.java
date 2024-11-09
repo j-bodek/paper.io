@@ -34,6 +34,7 @@ public class Room {
 
     public void removePlayer(String playerId) {
         this.players.remove(playerId);
+        this.board.stopPlaying();
     }
 
     public boolean hasPlayer(String playerId) {
@@ -54,6 +55,19 @@ public class Room {
     }
 
     public void startGame() {
+        this.board.startPlaying();
         this.template.convertAndSend("/room/subscribe", new InfoResponse("Game started"));
+
+        while (this.board.isPlaying()) {
+            try {
+                Thread.sleep(250);
+                this.template.convertAndSend("/room/subscribe", new PlayersResponse(this.getPlayersData()));
+                this.board.movePlayers(this.players);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        this.template.convertAndSend("/room/subscribe", new InfoResponse("Game ended"));
     }
 }

@@ -1,11 +1,15 @@
 package com.jbodek.ws_server.service;
 
+import java.util.HashMap;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import com.jbodek.ws_server.model.Player;
 import com.jbodek.ws_server.model.response.BoardResponse;
 
 public class Board {
 
+    private boolean playing = false;
     private int[][] board;
     private SimpMessagingTemplate template;
 
@@ -16,6 +20,18 @@ public class Board {
 
     public int[][] getBoard() {
         return this.board;
+    }
+
+    public boolean isPlaying() {
+        return this.playing;
+    }
+
+    public void startPlaying() {
+        this.playing = true;
+    }
+
+    public void stopPlaying() {
+        this.playing = false;
     }
 
     public void initPlayer(int[] position, int value) {
@@ -39,6 +55,24 @@ public class Board {
         ;
 
         this.broadcastUpdate();
+    }
+
+    public void movePlayers(HashMap<String, Player> players) {
+        for (String key : players.keySet()) {
+            Player player = players.get(key);
+            player.move();
+
+            int[] position = player.getData().getCurPos();
+
+            if (position[0] >= 0 && position[0] < 50 && position[1] >= 0 && position[1] < 50) {
+                this.board[position[1]][position[0]] = player.getData().getLineValue();
+            } else {
+                this.stopPlaying();
+            }
+
+        }
+
+        // TODO: Check if board area updated
     }
 
     private void broadcastUpdate() {

@@ -46,4 +46,14 @@ public class Player {
     public PlayerData getData() {
         return this.data;
     }
+
+    public void move() {
+        int[] curPos = this.data.getCurPos();
+        int[] direction = this.data.getDirection();
+
+        int[] newPos = { curPos[0] + direction[0], curPos[1] + direction[1] };
+
+        this.data.setPrevPos(curPos);
+        this.data.setCurPos(newPos);
+    }
 }
