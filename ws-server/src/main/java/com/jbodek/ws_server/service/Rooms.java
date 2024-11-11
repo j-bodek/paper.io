@@ -23,7 +23,7 @@ public class Rooms {
             rooms.put(roomName, room);
         }
 
-        if (room.size() >= 2) {
+        if (room.size() >= 1) {
             // todo: send message to client - throw exception
             return new ErrorResponse("Room " + roomName + " is full");
         }

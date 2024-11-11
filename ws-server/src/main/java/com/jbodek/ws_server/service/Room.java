@@ -27,7 +27,7 @@ public class Room {
 
         this.template.convertAndSend("/room/subscribe", new PlayersResponse(this.getPlayersData()));
 
-        if (this.size() == 2) {
+        if (this.size() == 1) {
             this.startGame();
         }
     }

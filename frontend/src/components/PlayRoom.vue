@@ -11,10 +11,20 @@
 </template>
 
 <script>
+
+import { Client } from '@stomp/stompjs';
+
 export default {
   name: 'PlayRoom',
+  data() {
+    return {
+      socket: null,
+      stompClient: null
+    }
+  },
   mounted() {
-    this.runAnimation();
+    // this.runAnimation();
+    this.startGame();
   },
   computed: {
     squareSize() {
@@ -37,6 +47,42 @@ export default {
     }
   },
   methods: {
+    startGame() {
+
+      this.stompClient = new Client({
+        brokerURL: 'ws://localhost:8000/ws-server'
+      });
+
+      this.stompClient.onConnect = (frame) => {
+        this.joinRoom();
+
+        this.stompClient.subscribe('/room/subscribe', (message) => {
+          this.gameListener(JSON.parse(message.body));
+        });
+      };
+
+      this.stompClient.onWebSocketError = (error) => {
+        console.error('Error with websocket', error);
+      };
+
+      this.stompClient.onStompError = (frame) => {
+        console.error('Broker reported error: ' + frame.headers['message']);
+        console.error('Additional details: ' + frame.body);
+      };
+
+      this.stompClient.activate();
+    },
+    joinRoom() {
+      // generate uuid
+      console.log("join room");
+      let uuid = Math.random().toString(36).substring(7);
+      this.stompClient.publish({ destination: '/app/room/join', body: JSON.stringify({ "id": uuid, "name": "test" }) });
+    },
+    gameListener(data) {
+      console.log(data);
+    },
+
+
     runAnimation() {
       this.$store.dispatch("initBoard", {
         width: 50,
