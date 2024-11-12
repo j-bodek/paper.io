@@ -9,15 +9,18 @@ export default{
             isPlaying: true,
             updateBoard: false,
             board: null,
-            // player coordinates
-            player: {
-                positions: {
-                    cur: null,
-                    prev: null,
-                },
-                // line: {start: null, end: null},
-                // direction: null,
-            },
+            // players state
+            players: {},
+            // players: {
+            //     null: {
+            //         positions: {
+            //             cur: null,
+            //             prev: null,
+            //         },
+            //         lineValue: null,
+            //         areaValue: null,
+            //     }
+            // },
           }
     },
     mutations:gameMutations,

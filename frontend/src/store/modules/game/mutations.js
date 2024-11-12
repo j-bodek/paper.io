@@ -63,13 +63,19 @@ export default{
     },
     updatePlayers(state, payload){
         Object.keys(payload.players).forEach((key) => {
-            if (state.player.positions.cur != null){
-                state.player.positions.prev = state.player.positions.cur.slice();
+            if (state.players[key] == null){
+                state.players[key] = {
+                    positions: {
+                        cur: payload.players[key].curPos.slice(),
+                        prev: payload.players[key].curPos.slice(),
+                    },
+                    lineValue: payload.players[key].lineValue,
+                    areaValue: payload.players[key].areaValue,
+                }
             }else{
-                state.player.positions.prev = payload.players[key].curPos.slice();
+                state.players[key].positions.prev = state.players[key].positions.cur.slice();
+                state.players[key].positions.cur = payload.players[key].curPos.slice();
             }
-
-            state.player.positions.cur = payload.players[key].curPos.slice();
         });
     },
     // movePlayer(state){

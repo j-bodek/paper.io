@@ -7,6 +7,8 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.jbodek.ws_server.model.Player;
+import com.jbodek.ws_server.model.payload.PlayerChangeDirPayload;
 import com.jbodek.ws_server.model.payload.PlayerPayload;
 import com.jbodek.ws_server.model.response.BaseResponse;
 import com.jbodek.ws_server.service.Rooms;
@@ -29,4 +31,16 @@ public class RoomController {
         return Rooms.addPlayer("room", playerPayload, this.template);
     }
 
+    @MessageMapping("/room/move")
+    public void move(@Payload PlayerChangeDirPayload playerChangeDirPayload)
+            throws Exception {
+
+        Player player = Rooms.getPlayer(playerChangeDirPayload.getRoomId(), playerChangeDirPayload.getId());
+        if (player == null) {
+            return;
+        }
+
+        player.changeDirection(playerChangeDirPayload.getDirection());
+
+    }
 }

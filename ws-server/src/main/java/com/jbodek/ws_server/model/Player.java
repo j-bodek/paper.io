@@ -47,6 +47,10 @@ public class Player {
         return this.data;
     }
 
+    public void changeDirection(int[] direction) {
+        this.data.setDirection(direction);
+    }
+
     public void move() {
         int[] curPos = this.data.getCurPos();
         int[] direction = this.data.getDirection();

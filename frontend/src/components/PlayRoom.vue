@@ -18,6 +18,7 @@ export default {
   name: 'PlayRoom',
   data() {
     return {
+      uuid: null,
       isGameEnded: false,
       stompClient: null
     }
@@ -75,8 +76,7 @@ export default {
     joinRoom() {
       // generate uuid
       console.log("join room");
-      let uuid = Math.random().toString(36).substring(7);
-      this.stompClient.publish({ destination: '/app/room/join', body: JSON.stringify({ "id": uuid, "name": "test" }) });
+      this.stompClient.publish({ destination: '/app/room/join', body: JSON.stringify({ "id": this.uuid, "name": "test" }) });
     },
 
     gameListener(data) {
@@ -87,14 +87,18 @@ export default {
         // update board
       } else {
         if (data.type === 'info' && data.content.toLowerCase() === 'game ended') {
-          this.$store.dispatch('setIsPlaying', false);
-          alert("Game ended");
+          setTimeout(() => {
+            this.$store.dispatch('setIsPlaying', false);
+            alert("Game ended");
+          }, 50);
         }
       }
     },
 
 
     startGame() {
+      this.uuid = Math.random().toString(36).substring(7);
+
       this.$store.dispatch("initBoard", {
         width: 50,
         height: Math.floor(this.board.height / this.squareSize),
@@ -141,9 +145,10 @@ export default {
     animateBoard() {
       const ctxBg = this.board.getContext('2d');
       const ctx = this.playersBoard.getContext('2d');
-      let player = this.$store.getters['getPlayer'];
+      let players = this.$store.getters['getPlayers'];
       ctxBg.fillStyle = '#17A137';
       ctx.fillStyle = '#80ed99';
+
       // let pause = false;
 
       // if (this.$store.getters['getUpdateBoard']) {
@@ -164,17 +169,25 @@ export default {
       // }
 
       let board = this.$store.getters['getBoard'];
-      if (board[player.positions.prev[1]][player.positions.prev[0]] === 2) {
-        ctx.clearRect(0, 0, this.board.width, this.board.height);
-      }
+      Object.keys(players).forEach((key) => {
+        let player = players[key];
 
-      ctx.fillRect(
-        player.positions.cur[0] * this.squareSize,
-        player.positions.cur[1] * this.squareSize,
-        this.squareSize, this.squareSize
-      );
-      this.updateCamera(player.positions.cur);
-      // this.$store.dispatch('movePlayer');
+        // if user is within area clean line
+        if (board[player.positions.prev[1]][player.positions.prev[0]] === player.areaValue) {
+          ctx.clearRect(0, 0, this.board.width, this.board.height);
+        }
+
+        ctx.fillRect(
+          player.positions.cur[0] * this.squareSize,
+          player.positions.cur[1] * this.squareSize,
+          this.squareSize, this.squareSize
+        );
+
+        // update only current player
+        if (key === this.uuid) {
+          this.updateCamera(player.positions.cur);
+        }
+      });
     },
     updateCamera(currentPosition) {
       let padding = 100;
@@ -202,16 +215,20 @@ export default {
       // listed four keys: w, a, s, d
       if (e.keyCode === 87) {
         // move up
-        this.$store.dispatch('changeDirection', { direction: [0, -1] });
+        this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [0, -1] }) });
+        // this.$store.dispatch('changeDirection', { direction: [0, -1] });
       } else if (e.keyCode === 65) {
         // move left
-        this.$store.dispatch('changeDirection', { direction: [-1, 0] });
+        this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [-1, 0] }) });
+        // this.$store.dispatch('changeDirection', { direction: [-1, 0] });
       } else if (e.keyCode === 83) {
         // move down
-        this.$store.dispatch('changeDirection', { direction: [0, 1] });
+        this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [0, 1] }) });
+        // this.$store.dispatch('changeDirection', { direction: [0, 1] });
       } else if (e.keyCode === 68) {
         // move right
-        this.$store.dispatch('changeDirection', { direction: [1, 0] });
+        this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [1, 0] }) });
+        // this.$store.dispatch('changeDirection', { direction: [1, 0] });
       }
     }
   }

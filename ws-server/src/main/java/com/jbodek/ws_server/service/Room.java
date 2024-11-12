@@ -32,6 +32,11 @@ public class Room {
         }
     }
 
+    public Player getPlayer(String playerId) {
+        // On purpose return pointer instead of copy of the object
+        return this.players.get(playerId);
+    }
+
     public void removePlayer(String playerId) {
         this.players.remove(playerId);
         this.board.stopPlaying();

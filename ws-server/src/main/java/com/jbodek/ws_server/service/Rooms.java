@@ -37,6 +37,15 @@ public class Rooms {
         return new InfoResponse("Player " + player.getName() + " joined room " + roomName);
     }
 
+    static public Player getPlayer(String roomName, String playerId) {
+        Room room = rooms.get(roomName);
+        if (room == null) {
+            return null;
+        }
+
+        return room.getPlayer(playerId);
+    }
+
     static public void removePlayer(String roomName, String playerId) {
         Room room = rooms.get(roomName);
         if (room == null) {
