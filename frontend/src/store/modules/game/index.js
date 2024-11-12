@@ -12,11 +12,11 @@ export default{
             // player coordinates
             player: {
                 positions: {
-                    cur: [0, 0],
-                    prev: [0, 0],
+                    cur: null,
+                    prev: null,
                 },
-                line: {start: null, end: null},
-                direction: [1, 0],
+                // line: {start: null, end: null},
+                // direction: null,
             },
           }
     },

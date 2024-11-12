@@ -18,7 +18,7 @@ export default {
   name: 'PlayRoom',
   data() {
     return {
-      socket: null,
+      isGameEnded: false,
       stompClient: null
     }
   },
@@ -47,13 +47,13 @@ export default {
     }
   },
   methods: {
-    startGame() {
+    initClient() {
 
       this.stompClient = new Client({
         brokerURL: 'ws://localhost:8000/ws-server'
       });
 
-      this.stompClient.onConnect = (frame) => {
+      this.stompClient.onConnect = () => {
         this.joinRoom();
 
         this.stompClient.subscribe('/room/subscribe', (message) => {
@@ -78,25 +78,42 @@ export default {
       let uuid = Math.random().toString(36).substring(7);
       this.stompClient.publish({ destination: '/app/room/join', body: JSON.stringify({ "id": uuid, "name": "test" }) });
     },
+
     gameListener(data) {
-      console.log(data);
+      if (data.type === 'players') {
+        this.$store.dispatch('updatePlayers', { players: data.players });
+        this.animateBoard();
+      } else if (data.type === 'board') {
+        // update board
+      } else {
+        if (data.type === 'info' && data.content.toLowerCase() === 'game ended') {
+          this.$store.dispatch('setIsPlaying', false);
+          alert("Game ended");
+        }
+      }
     },
 
 
-    runAnimation() {
+    startGame() {
       this.$store.dispatch("initBoard", {
         width: 50,
         height: Math.floor(this.board.height / this.squareSize),
       });
       document.addEventListener('keydown', this.changeDirection);
       this.drawGrid();
-      let animation = setInterval(() => {
-        if (!this.$store.getters['isPlaying']) {
-          clearInterval(animation);
-          alert('Game Over');
-        }
-        this.animateBoard();
-      }, 250);
+
+      this.initClient();
+
+      // let animation = setInterval(() => {
+      //   setTimeout(() => {
+      //     this.animateBoard();
+      //   }, 50);
+
+      //   if (!this.$store.getters['isPlaying']) {
+      //     alert("Game ended");
+      //     clearInterval(animation);
+      //   }
+      // }, 200);
     },
     drawGrid() {
       let bw = this.gridBoard.width;
@@ -127,24 +144,24 @@ export default {
       let player = this.$store.getters['getPlayer'];
       ctxBg.fillStyle = '#17A137';
       ctx.fillStyle = '#80ed99';
-      let pause = false;
+      // let pause = false;
 
-      if (this.$store.getters['getUpdateBoard']) {
-        console.log("update board");
-        let board = this.$store.getters['getBoard'];
-        for (let i = 0; i < board.length; i++) {
-          for (let j = 0; j < board[i].length; j++) {
-            if (board[i][j] === 2) {
-              ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
-            }
-          }
-        }
-        this.$store.dispatch('setUpdateBoard', false);
-        ctx.clearRect(0, 0, this.board.width, this.board.height);
-        if (pause) {
-          this.$store.dispatch('setIsPlaying', false);
-        }
-      }
+      // if (this.$store.getters['getUpdateBoard']) {
+      //   console.log("update board");
+      //   let board = this.$store.getters['getBoard'];
+      //   for (let i = 0; i < board.length; i++) {
+      //     for (let j = 0; j < board[i].length; j++) {
+      //       if (board[i][j] === 2) {
+      //         ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
+      //       }
+      //     }
+      //   }
+      //   this.$store.dispatch('setUpdateBoard', false);
+      //   ctx.clearRect(0, 0, this.board.width, this.board.height);
+      //   if (pause) {
+      //     this.$store.dispatch('setIsPlaying', false);
+      //   }
+      // }
 
       let board = this.$store.getters['getBoard'];
       if (board[player.positions.prev[1]][player.positions.prev[0]] === 2) {
@@ -157,7 +174,7 @@ export default {
         this.squareSize, this.squareSize
       );
       this.updateCamera(player.positions.cur);
-      this.$store.dispatch('movePlayer');
+      // this.$store.dispatch('movePlayer');
     },
     updateCamera(currentPosition) {
       let padding = 100;
