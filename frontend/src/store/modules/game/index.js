@@ -6,9 +6,16 @@ export default{
     state(){
         return{
             // general game state
+            uuid: null,
             isPlaying: true,
             updateBoard: false,
             board: null,
+            colors: {
+                playerLine: "#4ED0C1",
+                playerArea: "#2A9D8F",
+                opponentLine: "#F8C8A0",
+                opponentArea: "#F4A261",
+            },
             // players state
             players: {},
             // players: {

@@ -19,6 +19,9 @@ export default{
         state.board = board;
         state.updateBoard = true;
     },
+    setUuid(state, payload){
+        state.uuid = payload;
+    },
     setIsPlaying(state, payload){
         state.isPlaying = payload;
     },
