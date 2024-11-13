@@ -55,7 +55,6 @@ public class Board {
                 this.board[y][x] = value;
             }
         }
-        ;
 
         this.broadcastUpdate();
     }

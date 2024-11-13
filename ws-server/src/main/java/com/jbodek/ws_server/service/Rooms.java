@@ -23,7 +23,7 @@ public class Rooms {
             rooms.put(roomName, room);
         }
 
-        if (room.size() >= 1) {
+        if (room.size() >= 2) {
             // todo: send message to client - throw exception
             return new ErrorResponse("Room " + roomName + " is full");
         }
@@ -34,6 +34,11 @@ public class Rooms {
 
         Player player = new Player(playerPayload, room.size());
         room.addPlayer(player);
+
+        if (room.size() == 2) {
+            startGame(roomName);
+        }
+
         return new InfoResponse("Player " + player.getName() + " joined room " + roomName);
     }
 
@@ -57,5 +62,14 @@ public class Rooms {
         if (room.size() == 0) {
             rooms.remove(roomName);
         }
+    }
+
+    static private void startGame(String roomId) {
+
+        Room room = rooms.get(roomId);
+        room.startGame();
+
+        // after game ended, remove room
+        rooms.remove(roomId);
     }
 }

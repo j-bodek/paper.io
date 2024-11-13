@@ -26,10 +26,6 @@ public class Room {
         this.board.initPlayer(player.getData().getCurPos(), player.getData().getAreaValue());
 
         this.template.convertAndSend("/room/subscribe", new PlayersResponse(this.getPlayersData()));
-
-        if (this.size() == 1) {
-            this.startGame();
-        }
     }
 
     public Player getPlayer(String playerId) {

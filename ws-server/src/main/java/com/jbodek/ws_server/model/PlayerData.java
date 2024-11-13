@@ -19,7 +19,7 @@ public class PlayerData {
         this.direction = new int[] { 1 - 2 * player.getIndex(), 0 };
 
         // either top left or bottom right corner
-        int point = Math.max(50 * player.getIndex() - 1, 1);
+        int point = Math.max(49 * player.getIndex() - 1, 1);
         this.curPos = new int[] { point, point };
         this.prevPos = new int[] { point, point };
     }
