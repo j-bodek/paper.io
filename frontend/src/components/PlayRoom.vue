@@ -82,9 +82,11 @@ export default {
     gameListener(data) {
       if (data.type === 'players') {
         this.$store.dispatch('updatePlayers', { players: data.players });
-        this.animateBoard();
+        this.animatePlayers();
       } else if (data.type === 'board') {
         // update board
+        this.$store.dispatch('updateBoard', { board: data.board });
+        this.animateBoard();
       } else {
         if (data.type === 'info' && data.content.toLowerCase() === 'game ended') {
           setTimeout(() => {
@@ -107,17 +109,6 @@ export default {
       this.drawGrid();
 
       this.initClient();
-
-      // let animation = setInterval(() => {
-      //   setTimeout(() => {
-      //     this.animateBoard();
-      //   }, 50);
-
-      //   if (!this.$store.getters['isPlaying']) {
-      //     alert("Game ended");
-      //     clearInterval(animation);
-      //   }
-      // }, 200);
     },
     drawGrid() {
       let bw = this.gridBoard.width;
@@ -142,31 +133,10 @@ export default {
       context.strokeStyle = "black";
       context.stroke();
     },
-    animateBoard() {
-      const ctxBg = this.board.getContext('2d');
+    animatePlayers() {
       const ctx = this.playersBoard.getContext('2d');
       let players = this.$store.getters['getPlayers'];
-      ctxBg.fillStyle = '#17A137';
       ctx.fillStyle = '#80ed99';
-
-      // let pause = false;
-
-      // if (this.$store.getters['getUpdateBoard']) {
-      //   console.log("update board");
-      //   let board = this.$store.getters['getBoard'];
-      //   for (let i = 0; i < board.length; i++) {
-      //     for (let j = 0; j < board[i].length; j++) {
-      //       if (board[i][j] === 2) {
-      //         ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
-      //       }
-      //     }
-      //   }
-      //   this.$store.dispatch('setUpdateBoard', false);
-      //   ctx.clearRect(0, 0, this.board.width, this.board.height);
-      //   if (pause) {
-      //     this.$store.dispatch('setIsPlaying', false);
-      //   }
-      // }
 
       let board = this.$store.getters['getBoard'];
       Object.keys(players).forEach((key) => {
@@ -188,6 +158,26 @@ export default {
           this.updateCamera(player.positions.cur);
         }
       });
+    },
+    animateBoard() {
+      const ctxBg = this.board.getContext('2d');
+      const ctx = this.playersBoard.getContext('2d');
+      ctxBg.fillStyle = '#17A137';
+      ctx.fillStyle = '#80ed99';
+
+      if (this.$store.getters['getUpdateBoard']) {
+        console.log("update board");
+        let board = this.$store.getters['getBoard'];
+        for (let i = 0; i < board.length; i++) {
+          for (let j = 0; j < board[i].length; j++) {
+            if (board[i][j] === 2) {
+              ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
+            }
+          }
+        }
+        this.$store.dispatch('setUpdateBoard', false);
+        ctx.clearRect(0, 0, this.board.width, this.board.height);
+      }
     },
     updateCamera(currentPosition) {
       let padding = 100;
