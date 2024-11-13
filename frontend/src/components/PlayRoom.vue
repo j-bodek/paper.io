@@ -3,7 +3,8 @@
     <div class="canvas-container">
       <div class="canvas-wrapper">
         <canvas id="background" width="2000px" height="2000px"></canvas>
-        <canvas id="players" width="2000px" height="2000px"></canvas>
+        <canvas id="player-1" width="2000px" height="2000px"></canvas>
+        <canvas id="player-2" width="2000px" height="2000px"></canvas>
         <canvas id="grid" width="2000px" height="2000px"></canvas>
       </div>
     </div>
@@ -32,9 +33,6 @@ export default {
     },
     squareSize() {
       return this.board.width / 50;
-    },
-    playersBoard() {
-      return document.getElementById('players');
     },
     gridBoard() {
       return document.getElementById('grid');
@@ -79,21 +77,22 @@ export default {
       // generate uuid
       this.stompClient.publish({ destination: '/app/room/join', body: JSON.stringify({ "id": this.uuid, "name": "test" }) });
     },
-
     gameListener(data) {
       if (data.type === 'players') {
         let currentPlayersLen = Object.keys(this.$store.getters['getPlayers']).length;
         this.$store.dispatch('updatePlayers', { players: data.players });
 
         if (currentPlayersLen !== Object.keys(data.players).length) {
-          this.animateBoard();
+          Object.keys(data.players).forEach(key => {
+            this.animateBoard(key);
+          });
         }
 
         this.animatePlayers();
       } else if (data.type === 'board') {
         // update board
         this.$store.dispatch('updateBoard', { board: data.board });
-        this.animateBoard();
+        this.animateBoard(data.playerId);
       } else {
         if (data.type === 'info' && data.content.toLowerCase() === 'game ended') {
           setTimeout(() => {
@@ -103,8 +102,6 @@ export default {
         }
       }
     },
-
-
     startGame() {
       let uuid = Math.random().toString(36).substring(7);
       this.$store.dispatch('setUuid', uuid);
@@ -142,12 +139,12 @@ export default {
       context.stroke();
     },
     animatePlayers() {
-      const ctx = this.playersBoard.getContext('2d');
       let players = this.$store.getters['getPlayers'];
       let colorsMap = this.$store.getters['getColorsMap'];
 
       let board = this.$store.getters['getBoard'];
       Object.keys(players).forEach((key) => {
+        let ctx = this.getPlayerBoard(key).getContext('2d');
         let player = players[key];
         ctx.fillStyle = colorsMap[player.lineValue];
 
@@ -168,31 +165,29 @@ export default {
         }
       });
     },
-    animateBoard() {
+    animateBoard(playerId) {
       const ctxBg = this.board.getContext('2d');
-      const ctx = this.playersBoard.getContext('2d');
+      const ctx = this.getPlayerBoard(playerId).getContext('2d');
+
+      let players = this.$store.getters['getPlayers'];
       let colorMap = this.$store.getters['getColorsMap'];
 
-      if (this.$store.getters['getUpdateBoard']) {
-        ctx.clearRect(0, 0, this.board.width, this.board.height);
+      ctx.clearRect(0, 0, this.board.width, this.board.height);
 
-        let board = this.$store.getters['getBoard'];
+      let board = this.$store.getters['getBoard'];
 
-        for (let i = 0; i < board.length; i++) {
-          for (let j = 0; j < board[i].length; j++) {
-            if (board[i][j] !== 0 && board[i][j] % 2 === 0) {
-              // area
-              ctxBg.fillStyle = colorMap[board[i][j]];
-              ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
-            } else if (board[i][j] !== 0 && board[i][j] % 2 !== 0) {
-              // line
-              ctx.fillStyle = colorMap[board[i][j]];
-              ctx.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
-            }
+      for (let i = 0; i < board.length; i++) {
+        for (let j = 0; j < board[i].length; j++) {
+          if (board[i][j] !== 0 && board[i][j] % 2 === 0) {
+            // area
+            ctxBg.fillStyle = colorMap[board[i][j]];
+            ctxBg.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
+          } else if (board[i][j] === players[playerId].lineValue) {
+            // line
+            ctx.fillStyle = colorMap[board[i][j]];
+            ctx.fillRect(j * this.squareSize, i * this.squareSize, this.squareSize, this.squareSize);
           }
         }
-
-        this.$store.dispatch('setUpdateBoard', false);
       }
 
     },
@@ -216,6 +211,13 @@ export default {
         this.canvasContainer.style.top = `-${scrollTop}px`;
       } else {
         this.canvasContainer.style.top = `0px`;
+      }
+    },
+    getPlayerBoard(playerId) {
+      if (playerId === this.uuid) {
+        return document.getElementById('player-1');
+      } else {
+        return document.getElementById('player-2');
       }
     },
     changeDirection(e) {
@@ -286,7 +288,8 @@ export default {
   background: transparent;
 }
 
-#players {
+#player-1,
+#player-2 {
   top: 0;
   left: 0;
   position: absolute;

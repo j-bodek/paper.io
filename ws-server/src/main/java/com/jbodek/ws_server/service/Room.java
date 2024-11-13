@@ -23,7 +23,7 @@ public class Room {
 
     public void addPlayer(Player player) {
         this.players.put(player.getId(), new Player(player));
-        this.board.initPlayer(player.getData().getCurPos(), player.getData().getAreaValue());
+        this.board.initPlayer(player);
 
         this.template.convertAndSend("/room/subscribe", new PlayersResponse(this.getPlayersData()));
     }

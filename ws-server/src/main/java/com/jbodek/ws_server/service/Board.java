@@ -37,9 +37,11 @@ public class Board {
         this.playing = false;
     }
 
-    public void initPlayer(int[] position, int value) {
+    public void initPlayer(Player player) {
+        int[] position = player.getData().getCurPos();
+
         if (position[0] >= 0 && position[0] < 50 && position[1] >= 0 && position[1] < 50) {
-            this.board[position[1]][position[0]] = value;
+            this.board[position[1]][position[0]] = player.getData().getAreaValue();
         }
 
         // 8 directions
@@ -52,11 +54,11 @@ public class Board {
             int x = position[0] + dir[0];
             int y = position[1] + dir[1];
             if (x >= 0 && x < 50 && y >= 0 && y < 50) {
-                this.board[y][x] = value;
+                this.board[y][x] = player.getData().getAreaValue();
             }
         }
 
-        this.broadcastUpdate();
+        this.broadcastUpdate(player.getId());
     }
 
     public void movePlayers(HashMap<String, Player> players) {
@@ -122,7 +124,7 @@ public class Board {
         int[][] prevBoundingBoxArea = this.copyPrevBoundingBoxArea(boundingBox);
         this.floodFillBoundingBox(boundingBox, player);
         this.setPlayerArea(boundingBox, prevBoundingBoxArea, player);
-        this.broadcastUpdate();
+        this.broadcastUpdate(player.getId());
     }
 
     private int[] findBoundingBox(Player player) {
@@ -268,8 +270,8 @@ public class Board {
         }
     }
 
-    private void broadcastUpdate() {
-        BoardResponse response = new BoardResponse(this.board);
+    private void broadcastUpdate(String playerId) {
+        BoardResponse response = new BoardResponse(playerId, this.board);
         this.template.convertAndSend("/room/subscribe", response);
     }
 }
