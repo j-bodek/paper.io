@@ -1,6 +1,7 @@
 <template>
   <div class="timer">
-    <p>{{ Math.floor(this.gameplayTime / 1000) }}</p>
+    <p v-if="$store.getters['isPlaying']">Time: {{ Math.floor(this.gameplayTime / 1000) }}</p>
+    <p v-else>Waiting for player to join</p>
   </div>
   <div class="container">
     <div class="canvas-container">
@@ -23,12 +24,10 @@ export default {
   data() {
     return {
       gameplayTime: 0,
-      isGameEnded: false,
       stompClient: null
     }
   },
   mounted() {
-    // this.runAnimation();
     this.startGame();
   },
   computed: {
@@ -98,18 +97,25 @@ export default {
         // update board
         this.$store.dispatch('updateBoard', { board: data.board });
         this.animateBoard(data.playerId);
+      } else if (data.type === 'gameStarted') {
+        this.$store.dispatch('setIsPlaying', true);
       } else if (data.type === 'gameOver') {
-        setTimeout(() => {
-          this.$store.dispatch('setIsPlaying', false);
-          if (data.winnerId === null) {
-            alert("It's a draw!");
-          } else if (data.winnerId === this.uuid) {
-            alert("You won!");
-          } else {
-            alert("You lost!");
-          }
-        }, 50);
+        this.endGame(data);
       }
+    },
+    endGame(data) {
+      setTimeout(() => {
+        this.$store.dispatch('setIsPlaying', false);
+        if (data.winnerId === null) {
+          alert("It's a draw!");
+        } else if (data.winnerId === this.uuid) {
+          alert("You won!");
+        } else {
+          alert("You lost!");
+        }
+      }, 50);
+
+      this.stompClient.deactivate();
     },
     startGame() {
       let uuid = Math.random().toString(36).substring(7);
@@ -234,19 +240,15 @@ export default {
       if (e.keyCode === 87) {
         // move up
         this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [0, -1] }) });
-        // this.$store.dispatch('changeDirection', { direction: [0, -1] });
       } else if (e.keyCode === 65) {
         // move left
         this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [-1, 0] }) });
-        // this.$store.dispatch('changeDirection', { direction: [-1, 0] });
       } else if (e.keyCode === 83) {
         // move down
         this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [0, 1] }) });
-        // this.$store.dispatch('changeDirection', { direction: [0, 1] });
       } else if (e.keyCode === 68) {
         // move right
         this.stompClient.publish({ destination: '/app/room/move', body: JSON.stringify({ "id": this.uuid, "roomId": "room", "direction": [1, 0] }) });
-        // this.$store.dispatch('changeDirection', { direction: [1, 0] });
       }
     }
   }
@@ -260,7 +262,6 @@ export default {
   top: 0;
   right: 0;
   left: 0;
-  width: 50px;
   padding: 10px;
   margin: 10px;
   background: white;

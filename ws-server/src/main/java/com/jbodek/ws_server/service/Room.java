@@ -7,7 +7,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.jbodek.ws_server.model.Player;
 import com.jbodek.ws_server.model.PlayerData;
 import com.jbodek.ws_server.model.response.GameOverResponse;
-import com.jbodek.ws_server.model.response.InfoResponse;
+import com.jbodek.ws_server.model.response.GameStartedResponse;
 import com.jbodek.ws_server.model.response.PlayersResponse;
 
 public class Room {
@@ -58,7 +58,7 @@ public class Room {
 
     public void startGame() {
         this.board.startPlaying();
-        this.template.convertAndSend("/room/subscribe", new InfoResponse("Game started"));
+        this.template.convertAndSend("/room/subscribe", new GameStartedResponse());
 
         double timeTook = 0;
         long startTime = System.currentTimeMillis();

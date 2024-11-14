@@ -26,7 +26,4 @@ export default{
     getPlayers(state){
         return state.players;
     },
-    getUpdateBoard(state){
-        return state.updateBoard;
-    },
 }

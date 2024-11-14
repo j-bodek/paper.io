@@ -7,8 +7,7 @@ export default{
         return{
             // general game state
             uuid: null,
-            isPlaying: true,
-            updateBoard: false,
+            isPlaying: false,
             board: null,
             colors: {
                 playerLine: "#4ED0C1",

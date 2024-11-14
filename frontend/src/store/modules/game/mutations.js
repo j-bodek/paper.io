@@ -17,7 +17,6 @@ export default{
         }
 
         state.board = board;
-        state.updateBoard = true;
     },
     setUuid(state, payload){
         state.uuid = payload;
@@ -44,9 +43,5 @@ export default{
     },
     updateBoard(state, payload){
         state.board = payload.board;
-        this.commit("setUpdateBoard", true);
-    },
-    setUpdateBoard(state, payload){
-        state.updateBoard = payload;
     },
 }
