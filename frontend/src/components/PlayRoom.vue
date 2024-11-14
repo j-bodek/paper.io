@@ -113,9 +113,32 @@ export default {
         } else {
           alert("You lost!");
         }
-      }, 50);
 
-      this.stompClient.deactivate();
+        document.removeEventListener('keydown', this.changeDirection);
+        this.stompClient.deactivate();
+        this.stompClient = null;
+        this.gameplayTime = 0;
+        this.$store.dispatch('reset');
+        this.clearCanvas();
+
+        if (confirm('Do you want to play again?')) {
+          this.startGame();
+        }
+      }, 50);
+    },
+    clearCanvas() {
+      let ctxBg = this.board.getContext('2d');
+      let ctxGrid = this.gridBoard.getContext('2d');
+      let ctxPlayer1 = this.getPlayerBoard('player-1').getContext('2d');
+      let ctxPlayer2 = this.getPlayerBoard('player-2').getContext('2d');
+
+      let canvases = {
+        ctxBg, ctxGrid, ctxPlayer1, ctxPlayer2
+      };
+
+      Object.keys(canvases).forEach(key => {
+        canvases[key].clearRect(0, 0, this.board.width, this.board.height);
+      });
     },
     startGame() {
       let uuid = Math.random().toString(36).substring(7);

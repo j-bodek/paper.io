@@ -44,4 +44,10 @@ export default{
     updateBoard(state, payload){
         state.board = payload.board;
     },
+    reset(state, payload){
+        state.board = null;
+        state.players = {};
+        state.isPlaying = false;
+        state.uuid = null;
+    },
 }

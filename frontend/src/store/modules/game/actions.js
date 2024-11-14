@@ -2,6 +2,9 @@ export default{
     initBoard(context, payload) {
         context.commit('initBoard', payload);
     },
+    reset(context, payload) {
+        context.commit('reset', payload);
+    },
     updatePlayers(context, payload){
         context.commit('updatePlayers', payload);
     },
