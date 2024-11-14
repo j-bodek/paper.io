@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.jbodek.ws_server.model.Player;
 import com.jbodek.ws_server.model.PlayerData;
+import com.jbodek.ws_server.model.response.GameOverResponse;
 import com.jbodek.ws_server.model.response.InfoResponse;
 import com.jbodek.ws_server.model.response.PlayersResponse;
 
@@ -59,16 +60,30 @@ public class Room {
         this.board.startPlaying();
         this.template.convertAndSend("/room/subscribe", new InfoResponse("Game started"));
 
-        while (this.board.isPlaying()) {
+        double timeTook = 0;
+        long startTime = System.currentTimeMillis();
+
+        // game plays for 60 seconds
+        while (this.board.isPlaying() && System.currentTimeMillis() - startTime < 60000) {
             try {
-                Thread.sleep(250);
-                this.template.convertAndSend("/room/subscribe", new PlayersResponse(this.getPlayersData()));
+                // send board update every 250ms
+                Thread.sleep((int) (250 - timeTook));
+
+                long moveStartTime = System.currentTimeMillis();
+                this.template.convertAndSend("/room/subscribe",
+                        new PlayersResponse(System.currentTimeMillis() - startTime, this.getPlayersData()));
                 this.board.movePlayers(this.players);
+                timeTook = (System.currentTimeMillis() - moveStartTime);
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
-        this.template.convertAndSend("/room/subscribe", new InfoResponse("Game ended"));
+        if (this.board.isPlaying()) {
+            this.board.endGame(this.players);
+        }
+
+        this.template.convertAndSend("/room/subscribe", new GameOverResponse(this.board.getWinnerId()));
     }
 }

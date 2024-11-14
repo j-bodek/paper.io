@@ -12,6 +12,7 @@ import com.jbodek.ws_server.model.response.BoardResponse;
 
 public class Board {
 
+    private String winnerId = null;
     private boolean playing = false;
     private int[][] board;
     private SimpMessagingTemplate template;
@@ -19,6 +20,10 @@ public class Board {
     public Board(SimpMessagingTemplate template) {
         this.board = new int[50][50];
         this.template = template;
+    }
+
+    public String getWinnerId() {
+        return this.winnerId;
     }
 
     public int[][] getBoard() {
@@ -79,9 +84,30 @@ public class Board {
                 // update player area
                 this.updatePlayerArea(player);
             } else {
+                this.winnerId = this.getWinnerPlayer(player, players);
                 this.stopPlaying();
             }
         }
+    }
+
+    private String getWinnerPlayer(Player collidatedPlayer, HashMap<String, Player> players) {
+        // return winner player id
+
+        int[] position = collidatedPlayer.getData().getCurPos();
+
+        // Check if collidated player lost
+        if (this.isOutOfBounds(position)
+                || this.board[position[1]][position[0]] == collidatedPlayer.getData().getLineValue()) {
+
+            for (String id : players.keySet()) {
+                if (id != collidatedPlayer.getId()) {
+                    return id;
+                }
+            }
+        }
+
+        // Player crossed other player line and won
+        return collidatedPlayer.getId();
     }
 
     private boolean collisionDetected(int[] position) {
@@ -268,6 +294,51 @@ public class Board {
                 }
             }
         }
+    }
+
+    public void endGame(HashMap<String, Player> players) {
+        // game ended before one of the players won, calculate area
+        // and set winner player
+
+        this.playing = false;
+
+        HashMap<String, Integer> playerScores = new HashMap<String, Integer>();
+        HashMap<Integer, String> playerAreaValueMap = new HashMap<Integer, String>();
+
+        for (String playerId : players.keySet()) {
+            Player player = players.get(playerId);
+            int areaValue = player.getData().getAreaValue();
+            playerAreaValueMap.put(areaValue, playerId);
+            playerScores.put(playerId, 0);
+        }
+
+        for (int row = 0; row < 50; row++) {
+            for (int col = 0; col < 50; col++) {
+                int areaValue = this.board[row][col];
+                if (playerAreaValueMap.containsKey(areaValue)) {
+                    playerScores.put(playerAreaValueMap.get(areaValue),
+                            playerScores.get(playerAreaValueMap.get(areaValue)) + 1);
+                }
+            }
+        }
+
+        // check if draw
+        if (playerScores.values().stream().distinct().count() == 1) {
+            this.winnerId = null;
+            return;
+        }
+
+        String winner = null;
+        int maxScore = 0;
+
+        for (String playerId : playerScores.keySet()) {
+            if (playerScores.get(playerId) > maxScore) {
+                maxScore = playerScores.get(playerId);
+                winner = playerId;
+            }
+        }
+
+        this.winnerId = winner;
     }
 
     private void broadcastUpdate(String playerId) {
