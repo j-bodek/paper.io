@@ -1,4 +1,7 @@
 <template>
+  <div class="timer">
+    <p>{{ Math.floor(this.gameplayTime / 1000) }}</p>
+  </div>
   <div class="container">
     <div class="canvas-container">
       <div class="canvas-wrapper">
@@ -19,6 +22,7 @@ export default {
   name: 'PlayRoom',
   data() {
     return {
+      gameplayTime: 0,
       isGameEnded: false,
       stompClient: null
     }
@@ -79,6 +83,7 @@ export default {
     },
     gameListener(data) {
       if (data.type === 'players') {
+        this.gameplayTime = data.gameplayTime;
         let currentPlayersLen = Object.keys(this.$store.getters['getPlayers']).length;
         this.$store.dispatch('updatePlayers', { players: data.players });
 
@@ -93,13 +98,17 @@ export default {
         // update board
         this.$store.dispatch('updateBoard', { board: data.board });
         this.animateBoard(data.playerId);
-      } else {
-        if (data.type === 'info' && data.content.toLowerCase() === 'game ended') {
-          setTimeout(() => {
-            this.$store.dispatch('setIsPlaying', false);
-            alert("Game ended");
-          }, 50);
-        }
+      } else if (data.type === 'gameOver') {
+        setTimeout(() => {
+          this.$store.dispatch('setIsPlaying', false);
+          if (data.winnerId === null) {
+            alert("It's a draw!");
+          } else if (data.winnerId === this.uuid) {
+            alert("You won!");
+          } else {
+            alert("You lost!");
+          }
+        }, 50);
       }
     },
     startGame() {
@@ -246,6 +255,26 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.timer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 50px;
+  padding: 10px;
+  margin: 10px;
+  background: white;
+  border: 1px solid black;
+  color: black;
+  font-weight: bold;
+  z-index: 100;
+}
+
+.timer p {
+  margin: 0;
+  padding: 0;
+}
+
 .container {
   position: absolute;
   width: 100%;
