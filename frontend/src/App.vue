@@ -1,15 +1,11 @@
 <template>
-  <PlayRoom />
+  <router-view/>
 </template>
 
 <script>
-import PlayRoom from './components/PlayRoom.vue'
 
 export default {
   name: 'App',
-  components: {
-    PlayRoom
-  }
 }
 </script>
 
