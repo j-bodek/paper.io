@@ -1,4 +1,17 @@
 <template>
+  <!-- Play wrapper -->
+  <div class="play-container" :class="{'hidden': started}">
+      <div v-if="verdict" class="verdict">
+        <h2>{{ verdict }}</h2>
+      </div>
+
+      <h1>Press play to start a game</h1>
+      <p class="instructions">Use W, A, S, D to move</p>
+
+      <button id="playButton" class="play-button">Play</button>
+  </div>
+
+
   <div class="timer">
     <p v-if="$store.getters['isPlaying']">Time: {{ Math.floor(this.gameplayTime / 1000) }}</p>
     <p v-else>Waiting for player to join</p>
@@ -23,12 +36,14 @@ export default {
   name: 'PlayRoom',
   data() {
     return {
+      started: false,
+      verdict: null,
       gameplayTime: 0,
       stompClient: null
     }
   },
   mounted() {
-    this.startGame();
+    this.listenGameStarted();
   },
   computed: {
     uuid() {
@@ -48,9 +63,17 @@ export default {
     },
     container() {
       return document.querySelector('.container');
+    },
+    playButton() {
+      return document.getElementById('playButton');
     }
   },
   methods: {
+    listenGameStarted() {
+      this.playButton.addEventListener('click', () => {
+        this.startGame();
+      });
+    },
     initClient() {
 
       this.stompClient = new Client({
@@ -107,11 +130,11 @@ export default {
       setTimeout(() => {
         this.$store.dispatch('setIsPlaying', false);
         if (data.winnerId === null) {
-          alert("It's a draw!");
+          this.verdict = "It's a draw!";
         } else if (data.winnerId === this.uuid) {
-          alert("You won!");
+          this.verdict = "You won!";
         } else {
-          alert("You lost!");
+          this.verdict = "You lost!";
         }
 
         document.removeEventListener('keydown', this.changeDirection);
@@ -120,10 +143,7 @@ export default {
         this.gameplayTime = 0;
         this.$store.dispatch('reset');
         this.clearCanvas();
-
-        if (confirm('Do you want to play again?')) {
-          this.startGame();
-        }
+        this.started = false;
       }, 50);
     },
     clearCanvas() {
@@ -141,6 +161,9 @@ export default {
       });
     },
     startGame() {
+      this.started = true;
+      this.verdict = null;
+
       let uuid = Math.random().toString(36).substring(7);
       this.$store.dispatch('setUuid', uuid);
 
@@ -280,6 +303,47 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+.play-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #e9c46a;
+  z-index: 200;
+}
+
+.play-container.hidden {
+  display: none;
+}
+
+.play-container button{
+  padding: 10px 20px;
+  background: #2a9d8f;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.15s;
+}
+
+.play-container button:hover {
+  background: #264653;
+}
+
+.play-container h1 {
+  margin: 10px 0;
+}
+
+.play-container .instructions {
+  margin: 10px 0;
+}
+
 .timer {
   position: absolute;
   top: 0;

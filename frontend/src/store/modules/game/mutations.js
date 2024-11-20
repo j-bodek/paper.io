@@ -44,7 +44,7 @@ export default{
     updateBoard(state, payload){
         state.board = payload.board;
     },
-    reset(state, payload){
+    reset(state){
         state.board = null;
         state.players = {};
         state.isPlaying = false;
