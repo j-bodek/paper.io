@@ -1,0 +1,75 @@
+version: "3.11"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./frontend/src:/frontend/src"
+      - "./frontend/public:/frontend/public"
+      - "/src/node_modules"
+    environment:
+      - VUE_APP_BASE_API_URL=http://0.0.0.0:8000/
+      - VUE_APP_BASE_WS_URL=ws://0.0.0.0:8888/
+    depends_on:
+      - api
+  api:
+    build:
+      # path to directory containing Dockerfile
+      context: ./api
+      dockerfile: Dockerfile
+    # map local port 8000 to port 8000 in container
+    ports:
+      - "8000:8000"
+    # map directory from system to docker container
+    volumes:
+      - "./api/src:/src"
+    # commands run from container
+
+    # wait till db service start
+    # depends_on:
+    #   - redis
+  websocket_server:
+    build:
+      # path to directory containing Dockerfile
+      context: ./ws-server
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    # define environmental variables
+    environment:
+      # define port without exposing it. Only haproxy should have direct access to it
+      - PORT=8888
+      - API_BASE_URL=http://api:8000/
+      # redis env variables
+      - REDIS_HOST=redis_db
+      - REDIS_PORT=6379
+      - REDIS_PASS=dev_redispass
+      - TMP_CODESPACE_EXPIRE_UPDATE=1200
+      - CODESPACE_EXPIRE_UPDATE=1200
+    depends_on:
+      - api
+  # loadbalancer:
+  #   image: haproxy:1.8
+  #   restart: always
+  #   ports:
+  #     - "8888:8888"
+  #   volumes:
+  #     - "./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+  #   depends_on:
+  #     - websocket_server
+  #   links:
+  #     - websocket_server
+  #   deploy:
+  #     resources:
+  #       # set memory limit
+  #       limits:
+  #         memory: 500M
+  # redis:
+  #   image: redis:6.2-alpine
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server --save 20 1 --loglevel warning --requirepass dev_redispass --notify-keyspace-events Kx
