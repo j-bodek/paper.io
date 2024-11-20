@@ -8,6 +8,8 @@ public class BoardResponse {
     private int[][] board;
 
     public BoardResponse(String playerId, int[][] board) {
+
+        // Deep copy of the board
         int[][] boardCp = new int[board.length][];
         for (int i = 0; i < board.length; i++) {
             boardCp[i] = Arrays.copyOf(board[i], board[i].length);

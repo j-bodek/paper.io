@@ -43,6 +43,8 @@ public class Board {
     }
 
     public void initPlayer(Player player) {
+        // place player on the board
+
         int[] position = player.getData().getCurPos();
 
         if (position[0] >= 0 && position[0] < 50 && position[1] >= 0 && position[1] < 50) {
@@ -120,7 +122,6 @@ public class Board {
         // Check if player collidated with his own line or other player (all lines are
         // odd)
         if (this.board[position[1]][position[0]] != 0 && this.board[position[1]][position[0]] % 2 != 0) {
-            // TODO: if player cross other player line, kill other player
             return true;
         }
 

@@ -24,8 +24,7 @@ public class WebSocketEventListener {
         String playerId = (String) headerAccessor.getSessionAttributes().get("playerId");
         String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
 
-        Rooms.removePlayer(roomId, playerId);
-
+        Rooms.disconnected(roomId, playerId);
         this.template.convertAndSend("/room/subscribe", new ErrorResponse("Player " + playerId + " disconnected"));
     }
 }

@@ -3,6 +3,8 @@ package com.jbodek.ws_server.model;
 import com.jbodek.ws_server.model.payload.PlayerPayload;
 
 public class Player {
+    // Represents a player in the room
+
     private String id;
     private int index;
     private String name;

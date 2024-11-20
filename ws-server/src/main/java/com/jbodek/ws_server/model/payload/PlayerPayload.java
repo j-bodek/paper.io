@@ -1,6 +1,8 @@
 package com.jbodek.ws_server.model.payload;
 
 public class PlayerPayload {
+    // Create new player payload class
+
     private String id;
     private String name;
 

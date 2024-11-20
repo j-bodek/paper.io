@@ -5,6 +5,8 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class PlayerData {
+    // Represents the data associated with specific player
+
     private int lineValue;
     private int areaValue;
     private int[] direction;
@@ -19,6 +21,7 @@ public class PlayerData {
         this.direction = new int[] { 1 - 2 * player.getIndex(), 0 };
 
         // either top left or bottom right corner
+        // TODO: move board size to a constant (env variable?)
         int point = Math.max(49 * player.getIndex() - 1, 1);
         this.curPos = new int[] { point, point };
         this.prevPos = new int[] { point, point };

@@ -3,6 +3,8 @@ package com.jbodek.ws_server.model.payload;
 import java.util.Arrays;
 
 public class PlayerChangeDirPayload {
+    // move player payload class
+
     private String id;
     private String roomId;
     private int[] direction;

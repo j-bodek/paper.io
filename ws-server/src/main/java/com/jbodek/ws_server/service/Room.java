@@ -10,13 +10,15 @@ import com.jbodek.ws_server.model.response.GameOverResponse;
 import com.jbodek.ws_server.model.response.GameStartedResponse;
 import com.jbodek.ws_server.model.response.PlayersResponse;
 
-public class Room {
+public class Room extends Thread {
 
+    private String roomName;
     private SimpMessagingTemplate template;
     private Board board;
     private HashMap<String, Player> players;
 
-    public Room(SimpMessagingTemplate template) {
+    public Room(String roomName, SimpMessagingTemplate template) {
+        this.roomName = roomName;
         this.players = new HashMap<String, Player>();
         this.board = new Board(template);
         this.template = template;
@@ -39,6 +41,10 @@ public class Room {
         this.board.stopPlaying();
     }
 
+    // public void disconnect() {
+    // this.board.stopPlaying();
+    // }
+
     public boolean hasPlayer(String playerId) {
         return this.players.containsKey(playerId);
     }
@@ -56,7 +62,7 @@ public class Room {
         return this.players.size();
     }
 
-    public void startGame() {
+    public void run() {
         this.board.startPlaying();
         this.template.convertAndSend("/room/subscribe", new GameStartedResponse());
 
@@ -80,10 +86,15 @@ public class Room {
             }
         }
 
+        // if none of the players won yet, calculate winner
         if (this.board.isPlaying()) {
             this.board.endGame(this.players);
         }
 
+        // send game over message
         this.template.convertAndSend("/room/subscribe", new GameOverResponse(this.board.getWinnerId()));
+
+        // after game ended, remove room
+        Rooms.removeRoom(this.roomName);
     }
 }
